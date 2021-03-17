@@ -1,0 +1,82 @@
+/*
+ * File:   newmain.c
+ * Equipo 3: Raul Treviño(A00822010) 
+ *           Samuel Russo (A00226793)
+ *           Leonardo Ciscomani (A00226793
+ */
+
+
+#include "device_config.h"
+#include <math.h>
+//=======DIRECTIVES========
+#define _XTAL_FREQ 1000000
+#define DELAY_SWEEP 300
+#define DELAY_SWEEP2   500
+#define DELAY_SWEEP3   100  
+//====DATA TYPES SECTION======
+enum port_dir{ output, input };
+enum port_DCAC{ digital, analog };
+enum led_state{ led_OFF, led_ON };
+enum button_state{ pushed, no_pushed };
+enum exponent { bbase=2, limit=8};
+//======ISRs SECTION=========
+//ISR for high-priority
+__interrupt( high_priority ) void high_isr ( void ){
+    Nop( );            // Wait one cycle
+}
+//ISR for low-priority
+__interrupt( low_priority ) void low_isr ( void ){
+    Nop( );
+}
+//=======PROTOTYPE================
+void portsInit( void );
+void Win (void); 
+//=======MAIN SECTION===============
+
+void main( void ) {
+    int random;      //Variable configuration
+    int led;
+    portsInit( );
+    LATA= 0 ; 
+    char inverse; 
+    while( 1 ){                //Infinite cycle
+       random = rand()%8; 
+       led = pow (2,random);
+       LATA = led; 
+       __delay_ms(DELAY_SWEEP2);
+       inverse= LATA^0xFF;
+       
+       if (inverse == PORTD){
+           Win(); 
+    }
+       else{ 
+           
+           if (inverse==PORTD){         //Correct button scenario
+               __delay_ms (DELAY_SWEEP3);
+               Win();
+           }
+       }              
+       }
+}
+//=======FUNCTIONs SECTION=======
+void portsInit( void ){
+    ANSELD=digital;
+    TRISD=0b11111111;
+    ANSELA= digital; 
+    TRISA=0b00000000;
+}
+void Win(void){
+      int i=0;
+      while (i<7){
+          LATA = pow(2,i);
+          __delay_ms (DELAY_SWEEP);
+          i++;
+      }
+      i=7;
+      while (i>=0){
+          LATA = pow(2,i);
+          __delay_ms (DELAY_SWEEP);
+          i--;
+      }
+      return; 
+}
